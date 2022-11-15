@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>채팅 프로그램</title>
+
+  <!-- socket.io cdn -->
+  <script src="https://cdn.socket.io/4.5.3/socket.io.min.js" integrity="sha384-WPFUvHkB1aHA5TDSZi6xtDgkF0wXJcIIxXhC6h8OT8EH3fC5PWro5pWJ1THjcfEi" crossorigin="anonymous"></script>
+
+  <style>
+    .chat-list {
+      background-color: skyblue;
+      width: 50%;
+      height: 500px;
+      padding: 10px;
+      overflow-y: auto;
+      word-break: break-all;
+    }
+
+    .chat-list p {
+      margin-top: 5px;
+      margin-bottom: 3px;
+    }
+
+
+    ::-webkit-scrollbar {
+      display: none;
+    }
+
+
+    .chat-list div div {
+
+      padding: 6px;
+        max-width: 80%;
+    }
+
+    .my-chat {
+      padding-left: 30%;
+      text-align: right;
+
+    }
+
+    .my-chat div {
+      background-color: yellow;
+      display: inline-block;
+      border-radius: 3px 0px 3px 3px;
+    }
+
+ 
+
+    .other-chat div {
+      background-color: white;
+      display: inline-block;
+      border-radius: 0px 3px 3px 3px;
+    }
+
+    .notice {
+      text-align: center;
+      color: navy;
+      font-size: 12px;
+      margin-top: 5px;
+    }
+
+    .d-none {
+      display: none;
+    }
+  </style>
+</head>
+
+<body>
+  <h1>Socket.io</h1>
+
+  <!-- [실습44-2] 채팅창 입장 문구 안내 socket.it -> nickname -->
+
+  <div class="entry-box">
+    <form class="nickForm">
+      <input type="text" id="nickname" placeholder="닉네임" autofocus />
+      <button type="submit">입장</button>
+    </form>
+  </div>
+
+
+  <!-- [실습43] 채팅창 UI 만들기 -->
+  <div class="chat-box d-none">
+    <div id="chat-list" class="chat-list">
+      <!-- [실습43] 임시 데이터 -->
+      <!-- <div class="my-chat">
+          <div>user1: msg1</div>
+        </div>
+        <div class="other-chat">
+          <div>user2: msg2</div>
+        </div>
+        <div class="notice">xx가 입장했습니다.</div> -->
+    </div>
+    <form class="msgForm">
+      <input type="text" id="message" autofocus/>
+      <button type="submit">전송</button>
+    </form>
+  </div>
+
+  <script>
+    let socket = io.connect(); // socket 사용을 위한 객체 생성
+    let myNick; // 내 닉네임 설정
+
+    socket.on('connect', () => {
+      console.log('**** ⭕ Client Socket Connected >>', socket.id);
+    });
+
+    // [실습44] 채팅창 입장 안내 문구
+    // notice 이벤트를 받아서 공지 문구를 출력
+    socket.on('notice', (msg) => {
+      console.log('socket on notice >> ', msg);
+
+      document
+        .querySelector('#chat-list')
+        .insertAdjacentHTML('beforeend', `<div class="notice">${msg}</div>`);
+    });
+
+    socket.on('error', (msg) => {
+      alert(msg);
+    });
+
+    document.querySelector('.nickForm').addEventListener('submit',
+
+      // [실습44-2] 채팅창 입장 안내 문구 socket.id -> nickname
+      function entry(e) {
+        e.preventDefault();
+        if (document.querySelector('#nickname').value == '') {
+          return alert('값을 입력해주세요')
+        }
+        // console.log(document.querySelector('#nickname').value);
+        socket.emit('setNick', document.querySelector('#nickname').value);
+      }
+    )
+    socket.on('entrySuccess', (nick) => {
+      myNick = nick;
+
+      // 입력창 비활성화
+      // document.querySelector('#nickname').disabled = true;
+      // [입장] 버튼 비활성화
+      // document.querySelector('.entry-box > button').disabled = true;
+      document.querySelector('.entry-box ').classList.add('d-none');
+      // 채팅 박스를 보여줌
+      document.querySelector('.chat-box').classList.remove('d-none');
+    });
+
+    // [실습45] 채팅창 메세지 전송 step1
+    // "send" 이벤트 전송하기
+    document.querySelector('.msgForm').addEventListener('submit',
+      function send(e) {
+
+        e.preventDefault();
+        if (document.querySelector('#message').value == '') {
+          return
+        }
+        const data = {
+          myNick: myNick,
+          msg: document.querySelector('#message').value,
+        }
+        // document.createElement()
+        socket.emit('send', data)
+        document.querySelector('#message').value = ''
+      }
+    )
+
+    socket.on('newMessage', (data) => {
+      console.log('data.nick', data.nick);
+      console.log('data.msg', data.msg);
+      let chatList = document.querySelector('#chat-list')
+      let div = document.createElement('div')
+      let nickDiv = document.createElement('p')
+      let divChat = document.createElement('div')
+      if (myNick == data.nick) {
+        div.classList.add('my-chat')
+      } else {
+        div.classList.add('other-chat')
+      }
+      nickDiv.textContent = data.nick
+      divChat.textContent = data.msg
+      div.appendChild(nickDiv)
+
+      div.appendChild(divChat)
+
+      chatList.appendChild(div)
+
+      chatList.scrollTop = chatList.scrollHeight;
+    })
+  </script>
+</body>
+
+</html>
