@@ -3,7 +3,7 @@ const app = express();
 // socket은 express가 아닌 http 모듈에 연결해야 사용 가능
 const http = require("http").Server(app);
 const io = require("socket.io")(http); // http-socket 연결
-const PORT = 8000;
+const PORT = 8006;
 
 app.set("view engine", "ejs");
 app.use("/views", express.static(__dirname + "/views"));
