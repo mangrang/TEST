@@ -31,10 +31,10 @@
     }
 
 
-    .chat-list div div {
+    .chat-list div div div {
 
       padding: 6px;
-        max-width: 80%;
+      max-width: 80%;
     }
 
     .my-chat {
@@ -43,18 +43,44 @@
 
     }
 
-    .my-chat div {
+    .my-chat div div {
       background-color: yellow;
       display: inline-block;
       border-radius: 3px 0px 3px 3px;
+      text-align: left;
+      /* margin-right: 11%; */
+      margin-top: 3%;
     }
 
- 
+    /* .my-chat .innerDiv {
+      background-color: aliceblue;
+    } */
 
-    .other-chat div {
+    .my-chat .innerDiv p {
+      display: inline;
+      margin-right: 13px;
+      padding-top: 40px;
+      font-size: 14px;
+    }
+
+    .other-chat .innerDiv p {
+      display: inline;
+      margin-left: 13px;
+      padding-top: 40px;
+      font-size: 14px;
+    }
+
+
+
+    .other-chat {
+      margin-top: 10px;
+    }
+
+    .other-chat div div {
       background-color: white;
       display: inline-block;
       border-radius: 0px 3px 3px 3px;
+      margin-top: 3px;
     }
 
     .notice {
@@ -67,11 +93,57 @@
     .d-none {
       display: none;
     }
+
+    img {
+      height: 60px;
+      width: 60px;
+      border-radius: 50% 50%;
+    }
+
+    #message {
+      /* margin-right: 3%; */
+      /* margin-left: 3%; */
+      width: 50.7%;
+      height: 10vh;
+      display: block;
+    }
+
+    .msgForm button {
+      width: 10%;
+    }
+
+    /* .chat-list p img{
+     position: relative;
+     top: 5vh;
+     margin-left: 1vw;
+    } */
+
+    .entire {
+      font-size: 15px;
+      margin-top: 20px;
+      margin-bottom: 20px;
+    }
+
+    @media (max-width: 600px) {
+      .chat-list {
+        width: 90%;
+        margin-right: 6%;
+        margin-left: 3%;
+      }
+
+      #message {
+        /* margin-right: 3%; */
+        margin-left: 3%;
+        width: 92%;
+        height: 20vh;
+      }
+    }
   </style>
 </head>
 
 <body>
   <h1>Socket.io</h1>
+  <div class="entire"></div>
 
   <!-- [실습44-2] 채팅창 입장 문구 안내 socket.it -> nickname -->
 
@@ -96,7 +168,7 @@
         <div class="notice">xx가 입장했습니다.</div> -->
     </div>
     <form class="msgForm">
-      <input type="text" id="message" autofocus/>
+      <input type="text" id="message" autofocus />
       <button type="submit">전송</button>
     </form>
   </div>
@@ -104,7 +176,7 @@
   <script>
     let socket = io.connect(); // socket 사용을 위한 객체 생성
     let myNick; // 내 닉네임 설정
-
+    let dateinit;
     socket.on('connect', () => {
       console.log('**** ⭕ Client Socket Connected >>', socket.id);
     });
@@ -112,11 +184,14 @@
     // [실습44] 채팅창 입장 안내 문구
     // notice 이벤트를 받아서 공지 문구를 출력
     socket.on('notice', (msg) => {
+
       console.log('socket on notice >> ', msg);
 
       document
         .querySelector('#chat-list')
         .insertAdjacentHTML('beforeend', `<div class="notice">${msg}</div>`);
+
+
     });
 
     socket.on('error', (msg) => {
@@ -145,6 +220,7 @@
       document.querySelector('.entry-box ').classList.add('d-none');
       // 채팅 박스를 보여줌
       document.querySelector('.chat-box').classList.remove('d-none');
+      document.querySelector('h1').textContent = `${nick}님 환영합니다`
     });
 
     // [실습45] 채팅창 메세지 전송 step1
@@ -156,34 +232,166 @@
         if (document.querySelector('#message').value == '') {
           return
         }
+
+
+
+
         const data = {
           myNick: myNick,
           msg: document.querySelector('#message').value,
+
         }
         // document.createElement()
         socket.emit('send', data)
         document.querySelector('#message').value = ''
+        let chatList = document.querySelector('#chat-list')
+
       }
     )
+    
+    socket.on('entire', (data) => {
+      let parentH = document.querySelector('h1')
+      console.log(data);
+      console.log(Object.keys(data).length)
+      entire = document.querySelector('.entire')
+      entire.textContent = `접속자 : ${Object.keys(data).length}명`
+      
+    })
 
     socket.on('newMessage', (data) => {
+
       console.log('data.nick', data.nick);
       console.log('data.msg', data.msg);
       let chatList = document.querySelector('#chat-list')
       let div = document.createElement('div')
+
       let nickDiv = document.createElement('p')
       let divChat = document.createElement('div')
-      if (myNick == data.nick) {
-        div.classList.add('my-chat')
-      } else {
-        div.classList.add('other-chat')
+      divChat.classList.add('chathere')
+      let innerDiv = document.createElement('div')
+      innerDiv.classList.add('innerDiv')
+      let kakaoImg = document.createElement('img')
+      kakaoImg.src = "/static/img/kakao.jpg"
+
+      let today = new Date();
+      let hours = today.getHours(); // 시
+      let minutes = today.getMinutes();
+
+      console.log(`0${hours}`);
+
+      if (hours < 10) {
+        hours = `0${hours}`
       }
-      nickDiv.textContent = data.nick
-      divChat.textContent = data.msg
-      div.appendChild(nickDiv)
+      if (minutes < 10) {
+        minutes = `0${minutes}`
+      }
+      console.log(chatList.lastChild);
+      let timeDiv = document.createElement('p')
+          timeDiv.innerHTML = `${hours}:${minutes}`
+          divChat.textContent = data.msg
+          nickDiv.textContent = data.nick
 
-      div.appendChild(divChat)
 
+      if (chatList.lastChild.className == 'my-chat') {
+
+        let daterinit = `${hours}:${minutes}`
+        
+        console.log(dateinit == daterinit);
+
+        if (dateinit == daterinit) {
+  
+
+          if (myNick == data.nick) {
+            div.classList.add('my-chat')
+
+            innerDiv.appendChild(divChat)
+          } else {
+            div.classList.add('other-chat')
+
+            div.appendChild(nickDiv)
+            // nickDiv.appendChild(kakaoImg)
+
+            innerDiv.appendChild(divChat)
+            innerDiv.appendChild(timeDiv);
+          }
+
+
+
+        } else {
+        
+
+          if (myNick == data.nick) {
+            div.classList.add('my-chat')
+            innerDiv.appendChild(timeDiv);
+            innerDiv.appendChild(divChat)
+          } else {
+            div.classList.add('other-chat')
+
+            div.appendChild(nickDiv)
+            // nickDiv.appendChild(kakaoImg)
+
+            innerDiv.appendChild(divChat)
+            innerDiv.appendChild(timeDiv);
+
+          }
+          dateinit = `${hours}:${minutes}`
+
+        }
+
+      } else {
+
+
+
+        let daterinit = `${hours}:${minutes}`
+        
+        console.log(dateinit == daterinit);
+
+        if (dateinit == daterinit) {
+  
+
+          if (myNick == data.nick) {
+            div.classList.add('my-chat')
+            innerDiv.appendChild(timeDiv);
+            innerDiv.appendChild(divChat)
+          } else {
+            div.classList.add('other-chat')
+
+            div.appendChild(nickDiv)
+            // nickDiv.appendChild(kakaoImg)
+
+            innerDiv.appendChild(divChat)
+        
+          }
+
+
+
+        } else {
+        
+
+          if (myNick == data.nick) {
+            div.classList.add('my-chat')
+            innerDiv.appendChild(timeDiv);
+            innerDiv.appendChild(divChat)
+          } else {
+            div.classList.add('other-chat')
+
+            div.appendChild(nickDiv)
+            // nickDiv.appendChild(kakaoImg)
+
+            innerDiv.appendChild(divChat)
+            innerDiv.appendChild(timeDiv);
+
+          }
+          dateinit = `${hours}:${minutes}`
+
+        }
+
+      }
+
+
+
+
+      div.appendChild(innerDiv)
       chatList.appendChild(div)
 
       chatList.scrollTop = chatList.scrollHeight;

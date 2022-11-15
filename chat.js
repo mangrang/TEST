@@ -7,6 +7,7 @@ const PORT = 8006;
 
 app.set("view engine", "ejs");
 app.use("/views", express.static(__dirname + "/views"));
+app.use("/static", express.static(__dirname + "/static"));
 
 app.get("/", (req, res) => {
   res.render("chat");
@@ -44,26 +45,36 @@ io.on("connection", (socket) => {
       // 닉네임 중복이 없다면
       nickArray[socket.id] = nick; // { socket.id: nick }
       console.log("접속 유저 목록 >> ", nickArray);
-      io.emit("notice", `${nick}님이 입장하셨습니다.`);
+      io.emit("notice", `${nick}님이 입장하였습니다`);
+
       socket.emit("entrySuccess", nick);
+      io.emit("entire", nickArray)
     }
   });
 
   // [실습 44-3] 접속자 퇴장시
   // 'notice' 이벤트로 퇴장 공지
   socket.on('disconnect', () => {
+    if (nickArray[socket.id] == undefined){
+      console.log('누가왔다감');
+      }else {
+
     // 1. socket.id 콘솔로그 찍기
     // 2. 전체 공지 ('notice', 퇴장메세지(유저 닉네임 포함해서))
     //  ex. aa님이 퇴장하셨습니다
     // 3. nickArray에서 해당 유저 삭제
     console.log(nickArray[socket.id]);
+ 
     io.emit('notice', `${nickArray[socket.id]}님이 퇴장하셨습니다`);
     delete nickArray [socket.id]
+    io.emit("entire", nickArray)
+
+    }
   });
 
   socket.on('send', (data) => {
     console.log('socket on send >> ', data);;
-    const sendData = { nick: data.myNick, msg: data.msg }
+    const sendData = { nick: data.myNick, msg: data.msg}
     io.emit('newMessage', sendData)
   });
 });
