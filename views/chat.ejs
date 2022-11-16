@@ -56,14 +56,14 @@
       background-color: aliceblue;
     } */
 
-    .my-chat .innerDiv p {
+    .my-chat .innerDiv span {
       display: inline;
       margin-right: 13px;
       padding-top: 40px;
       font-size: 14px;
     }
 
-    .other-chat .innerDiv p {
+    .other-chat .innerDiv span {
       display: inline;
       margin-left: 13px;
       padding-top: 40px;
@@ -286,7 +286,7 @@
         minutes = `0${minutes}`
       }
       console.log(chatList.lastChild);
-      let timeDiv = document.createElement('p')
+      let timeDiv = document.createElement('span')
           timeDiv.innerHTML = `${hours}:${minutes}`
           divChat.textContent = data.msg
           nickDiv.textContent = data.nick
@@ -304,6 +304,11 @@
           if (myNick == data.nick) {
             div.classList.add('my-chat')
 
+            console.log('요소선택', chatList.lastChild.querySelector('span'))
+            if(chatList.lastChild.querySelector('span')){
+            chatList.lastChild.querySelector('span').remove()
+            }
+            innerDiv.appendChild(timeDiv);
             innerDiv.appendChild(divChat)
           } else {
             div.classList.add('other-chat')
@@ -360,6 +365,7 @@
             // nickDiv.appendChild(kakaoImg)
 
             innerDiv.appendChild(divChat)
+            innerDiv.appendChild(timeDiv);
         
           }
 
